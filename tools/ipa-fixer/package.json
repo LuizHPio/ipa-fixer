@@ -24,7 +24,7 @@
     "build:lib": "tsc",
     "build:web": "node scripts/build-web.mjs",
     "build": "npm run build:lib && npm run build:web",
-    "test": "node --test test/fixer.test.mjs"
+    "test": "node --test test/*.test.mjs"
   },
   "dependencies": {},
   "devDependencies": {
