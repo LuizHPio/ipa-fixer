@@ -61,5 +61,10 @@ const finalHtml = template.replace(marker, () => escapedWorkerCode);
 const htmlOut = path.join(webDir, "index.html");
 fs.writeFileSync(htmlOut, finalHtml, "utf8");
 
+const cssSrc = path.join(pkgRoot, "web-src", "styles.css");
+const cssOut = path.join(webDir, "styles.css");
+fs.copyFileSync(cssSrc, cssOut);
+
 console.log(`Built ${path.relative(repoRoot, esmOut)} (${fs.statSync(esmOut).size.toLocaleString("en-US")} bytes)`);
 console.log(`Built ${path.relative(repoRoot, htmlOut)} (${fs.statSync(htmlOut).size.toLocaleString("en-US")} bytes)`);
+console.log(`Copied ${path.relative(repoRoot, cssOut)} (${fs.statSync(cssOut).size.toLocaleString("en-US")} bytes)`);
