@@ -235,6 +235,10 @@
       transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
     }
 
+    [hidden] {
+      display: none !important;
+    }
+
     button:disabled {
       opacity: 0.45;
       cursor: not-allowed;
@@ -882,6 +886,10 @@
 
       btnShare.addEventListener("click", async () => {
         if (!outputBlob || !outputFileName) return;
+        if (typeof navigator.share !== "function") {
+          appendLogHtml('<span class="c-yellow">[!] Web Share API is unavailable in this browser/context. Use "Download Fixed IPA" instead.</span>');
+          return;
+        }
         try {
           const shareFile = new File([outputBlob], outputFileName, { type: "application/octet-stream" });
           await navigator.share({
