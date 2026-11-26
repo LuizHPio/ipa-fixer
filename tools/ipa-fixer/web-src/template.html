@@ -2,97 +2,121 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#06090f">
   <title>IPA ldid Assert Fixer</title>
   <style>
     :root {
-      --bg: #0d1117;
-      --surface: #161b22;
-      --surface-alt: #1c222b;
-      --border: #30363d;
-      --text: #e6edf3;
-      --muted: #8b949e;
-      --accent: #58a6ff;
-      --accent-hover: #79c0ff;
-      --red: #ff7b72;
-      --green: #3fb950;
-      --yellow: #d29922;
-      --cyan: #56d4dd;
+      --bg: #06090f;
+      --glass: rgba(20, 26, 36, 0.58);
+      --glass-soft: rgba(255, 255, 255, 0.035);
+      --glass-hover: rgba(255, 255, 255, 0.07);
+      --border: rgba(255, 255, 255, 0.09);
+      --border-strong: rgba(255, 255, 255, 0.16);
+      --text: #f0f4f8;
+      --muted: #8e9aaf;
+      --accent: #60a5fa;
+      --accent-hover: #93c5fd;
+      --red: #fb7185;
+      --green: #4ade80;
+      --yellow: #fbbf24;
+      --cyan: #22d3ee;
       --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
-      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      --sans: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
 
     * {
       box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html {
+      background: var(--bg);
     }
 
     body {
       margin: 0;
-      padding: 24px 16px 48px;
-      background: var(--bg);
+      min-height: 100dvh;
+      padding: max(18px, env(safe-area-inset-top)) 14px max(32px, env(safe-area-inset-bottom));
+      background:
+        radial-gradient(85vw 50vh at 10% -5%, rgba(56, 189, 248, 0.14), transparent 65%),
+        radial-gradient(80vw 55vh at 95% 15%, rgba(99, 102, 241, 0.14), transparent 65%),
+        radial-gradient(90vw 50vh at 50% 105%, rgba(16, 185, 129, 0.08), transparent 65%),
+        var(--bg);
+      background-attachment: fixed;
       color: var(--text);
       font-family: var(--sans);
-      line-height: 1.5;
+      line-height: 1.45;
+      -webkit-font-smoothing: antialiased;
     }
 
     .container {
-      max-width: 900px;
+      max-width: 780px;
       margin: 0 auto;
       display: flex;
       flex-direction: column;
-      gap: 18px;
+      gap: 14px;
     }
 
     header {
       display: flex;
-      flex-wrap: wrap;
+      flex-direction: column;
+      gap: 8px;
+      padding: 4px 2px 6px;
+    }
+
+    .header-top {
+      display: flex;
+      align-items: center;
       justify-content: space-between;
-      align-items: flex-start;
       gap: 12px;
-      padding-bottom: 12px;
-      border-bottom: 1px solid var(--border);
     }
 
     h1 {
       margin: 0;
-      font-size: 1.45rem;
-      letter-spacing: -0.01em;
+      font-size: 1.35rem;
+      font-weight: 700;
+      letter-spacing: -0.02em;
     }
 
     .subtitle {
-      margin: 4px 0 0;
+      margin: 0;
       color: var(--muted);
-      font-size: 0.92rem;
+      font-size: 0.84rem;
+      line-height: 1.5;
     }
 
     .subtitle code {
       font-family: var(--mono);
-      font-size: 0.85em;
+      font-size: 0.82em;
       color: var(--cyan);
-      background: var(--surface);
-      padding: 2px 6px;
-      border-radius: 4px;
+      background: var(--glass-soft);
+      padding: 1px 6px;
+      border-radius: 6px;
       border: 1px solid var(--border);
     }
 
     .header-actions {
       display: flex;
       align-items: center;
-      gap: 10px;
-      margin-left: auto;
+      gap: 8px;
+      flex-shrink: 0;
     }
 
     .privacy-badge {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      font-size: 0.8rem;
+      align-self: flex-start;
+      font-size: 0.74rem;
       font-weight: 600;
       color: var(--green);
-      background: rgba(63, 185, 80, 0.12);
-      border: 1px solid rgba(63, 185, 80, 0.35);
+      background: rgba(74, 222, 128, 0.1);
+      border: 1px solid rgba(74, 222, 128, 0.24);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
       border-radius: 999px;
-      padding: 5px 12px;
+      padding: 4px 10px;
       white-space: nowrap;
     }
 
@@ -100,12 +124,13 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      width: 34px;
-      height: 34px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
-      background: #ffdd00;
-      color: #0d1117;
-      border: 1px solid rgba(255, 221, 0, 0.6);
+      background: rgba(255, 221, 0, 0.92);
+      color: #090d16;
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      box-shadow: 0 4px 14px rgba(255, 221, 0, 0.2);
       text-decoration: none;
       flex-shrink: 0;
       transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
@@ -114,7 +139,7 @@
     .coffee-btn:hover {
       background: #ffe74c;
       transform: translateY(-1px);
-      box-shadow: 0 4px 12px rgba(255, 221, 0, 0.25);
+      box-shadow: 0 6px 18px rgba(255, 221, 0, 0.3);
     }
 
     .coffee-btn svg {
@@ -124,107 +149,152 @@
     }
 
     .card {
-      background: var(--surface);
+      background: var(--glass);
       border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 18px;
+      border-radius: 18px;
+      padding: 14px;
+      backdrop-filter: blur(20px) saturate(150%);
+      -webkit-backdrop-filter: blur(20px) saturate(150%);
+      box-shadow:
+        0 10px 30px rgba(0, 0, 0, 0.32),
+        inset 0 1px 0 rgba(255, 255, 255, 0.06);
     }
 
     .dropzone {
-      display: block;
-      border: 2px dashed var(--border);
-      border-radius: 10px;
-      padding: 28px 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border: 1.5px dashed var(--border-strong);
+      border-radius: 14px;
+      padding: 24px 16px;
       text-align: center;
       cursor: pointer;
-      transition: border-color 0.15s ease, background 0.15s ease;
-      background: var(--surface-alt);
+      transition: border-color 0.18s ease, background 0.18s ease, transform 0.18s ease;
+      background: var(--glass-soft);
     }
 
     .dropzone:hover,
     .dropzone.dragover {
       border-color: var(--accent);
-      background: rgba(88, 166, 255, 0.08);
+      background: rgba(96, 165, 250, 0.09);
     }
 
     .dropzone input[type="file"] {
       display: none;
     }
 
+    .dropzone-icon {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(96, 165, 250, 0.12);
+      border: 1px solid rgba(96, 165, 250, 0.25);
+      color: var(--accent);
+      margin-bottom: 2px;
+    }
+
+    .dropzone-icon svg {
+      width: 18px;
+      height: 18px;
+    }
+
     .dropzone-title {
-      font-size: 1rem;
+      font-size: 0.96rem;
       font-weight: 600;
-      margin-bottom: 4px;
     }
 
     .dropzone-hint {
-      font-size: 0.86rem;
+      font-size: 0.8rem;
       color: var(--muted);
+      max-width: 44ch;
     }
 
     .selected-file {
-      margin-top: 12px;
+      margin-top: 6px;
       font-family: var(--mono);
-      font-size: 0.86rem;
+      font-size: 0.78rem;
       color: var(--cyan);
+      background: rgba(34, 211, 238, 0.08);
+      border: 1px solid rgba(34, 211, 238, 0.2);
+      border-radius: 999px;
+      padding: 4px 12px;
+      max-width: 100%;
       word-break: break-all;
     }
 
     .options-grid {
       display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 12px;
-      margin-top: 14px;
+      grid-template-columns: 1fr;
+      gap: 8px;
+      margin-top: 12px;
     }
 
     .option-item {
       display: flex;
       align-items: flex-start;
-      gap: 10px;
-      padding: 10px 12px;
+      gap: 11px;
+      padding: 11px 12px;
       border: 1px solid var(--border);
-      border-radius: 8px;
-      background: var(--surface-alt);
+      border-radius: 12px;
+      background: var(--glass-soft);
       cursor: pointer;
       user-select: none;
+      transition: background 0.15s ease, border-color 0.15s ease;
+    }
+
+    .option-item:hover {
+      background: var(--glass-hover);
+      border-color: var(--border-strong);
     }
 
     .option-item input {
-      margin-top: 3px;
+      margin-top: 2px;
       accent-color: var(--accent);
-      width: 16px;
-      height: 16px;
+      width: 17px;
+      height: 17px;
       flex-shrink: 0;
     }
 
     .option-title {
-      font-size: 0.92rem;
+      font-size: 0.88rem;
       font-weight: 600;
       display: block;
     }
 
     .option-desc {
-      font-size: 0.8rem;
+      font-size: 0.77rem;
       color: var(--muted);
       display: block;
       margin-top: 2px;
+      line-height: 1.4;
+    }
+
+    .option-desc code {
+      font-family: var(--mono);
+      font-size: 0.9em;
+      color: var(--text);
     }
 
     .actions {
       display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-top: 16px;
-      align-items: center;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 14px;
     }
 
     button,
     .btn-link {
       appearance: none;
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 10px 16px;
-      font-size: 0.92rem;
+      border-radius: 12px;
+      padding: 12px 16px;
+      min-height: 44px;
+      font-size: 0.9rem;
       font-weight: 600;
       cursor: pointer;
       text-decoration: none;
@@ -232,7 +302,12 @@
       align-items: center;
       justify-content: center;
       gap: 8px;
-      transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+      transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease, transform 0.1s ease;
+    }
+
+    button:active:not(:disabled),
+    .btn-link:active {
+      transform: scale(0.99);
     }
 
     [hidden] {
@@ -240,52 +315,56 @@
     }
 
     button:disabled {
-      opacity: 0.45;
+      opacity: 0.4;
       cursor: not-allowed;
     }
 
     .btn-primary {
-      background: #238636;
-      border-color: rgba(240, 246, 252, 0.15);
-      color: #ffffff;
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.85), rgba(16, 185, 129, 0.85));
+      border-color: rgba(74, 222, 128, 0.4);
+      color: #04130a;
+      box-shadow: 0 4px 16px rgba(34, 197, 94, 0.2);
     }
 
     .btn-primary:hover:not(:disabled) {
-      background: #2ea043;
+      background: linear-gradient(135deg, rgba(74, 222, 128, 0.95), rgba(16, 185, 129, 0.95));
     }
 
     .btn-secondary {
-      background: var(--surface-alt);
+      background: var(--glass-soft);
+      border-color: var(--border-strong);
       color: var(--text);
     }
 
     .btn-secondary:hover:not(:disabled) {
+      background: var(--glass-hover);
       border-color: var(--accent);
       color: var(--accent-hover);
     }
 
     .btn-danger {
-      background: rgba(248, 81, 73, 0.15);
-      border-color: rgba(248, 81, 73, 0.45);
+      background: rgba(251, 113, 133, 0.14);
+      border-color: rgba(251, 113, 133, 0.35);
       color: var(--red);
     }
 
     .btn-danger:hover:not(:disabled) {
-      background: rgba(248, 81, 73, 0.25);
+      background: rgba(251, 113, 133, 0.24);
     }
 
     .btn-download {
-      background: #1f6feb;
-      border-color: rgba(240, 246, 252, 0.15);
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.9), rgba(37, 99, 235, 0.9));
+      border-color: rgba(147, 197, 253, 0.35);
       color: #ffffff;
+      box-shadow: 0 4px 16px rgba(59, 130, 246, 0.25);
     }
 
     .btn-download:hover {
-      background: #388bfd;
+      background: linear-gradient(135deg, rgba(96, 165, 250, 0.95), rgba(59, 130, 246, 0.95));
     }
 
     .progress-wrap {
-      margin-top: 14px;
+      margin-top: 12px;
       display: none;
     }
 
@@ -296,7 +375,7 @@
     .progress-meta {
       display: flex;
       justify-content: space-between;
-      font-size: 0.84rem;
+      font-size: 0.78rem;
       color: var(--muted);
       margin-bottom: 6px;
       gap: 8px;
@@ -311,24 +390,23 @@
 
     .progress-bar {
       width: 100%;
-      height: 8px;
-      background: var(--surface-alt);
+      height: 6px;
+      background: rgba(255, 255, 255, 0.06);
       border-radius: 999px;
       overflow: hidden;
-      border: 1px solid var(--border);
     }
 
     .progress-fill {
       height: 100%;
       width: 0%;
       background: linear-gradient(90deg, var(--accent), var(--cyan));
-      transition: width 0.1s linear;
+      transition: width 0.12s linear;
     }
 
     .summary-grid {
       display: none;
-      grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
-      gap: 10px;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 8px;
     }
 
     .summary-grid.visible {
@@ -336,21 +414,23 @@
     }
 
     .stat-box {
-      background: var(--surface-alt);
+      background: var(--glass);
       border: 1px solid var(--border);
-      border-radius: 8px;
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      border-radius: 14px;
       padding: 10px 12px;
     }
 
     .stat-label {
-      font-size: 0.76rem;
+      font-size: 0.7rem;
       color: var(--muted);
       text-transform: uppercase;
       letter-spacing: 0.04em;
     }
 
     .stat-value {
-      font-size: 1.25rem;
+      font-size: 1.15rem;
       font-weight: 700;
       font-family: var(--mono);
       margin-top: 2px;
@@ -365,42 +445,47 @@
 
     .download-bar {
       display: none;
-      flex-wrap: wrap;
-      align-items: center;
-      justify-content: space-between;
+      flex-direction: column;
+      align-items: stretch;
       gap: 12px;
-      background: rgba(63, 185, 80, 0.08);
-      border-color: rgba(63, 185, 80, 0.35);
+      background: rgba(74, 222, 128, 0.08);
+      border-color: rgba(74, 222, 128, 0.28);
     }
 
     .download-bar.visible {
       display: flex;
     }
 
+    .download-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
     .log-header {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
     }
 
     .log-header h2 {
       margin: 0;
-      font-size: 0.95rem;
+      font-size: 0.78rem;
       color: var(--muted);
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.06em;
     }
 
     .terminal {
-      background: #0a0d12;
+      background: rgba(4, 7, 13, 0.72);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 12px 14px;
+      border-radius: 12px;
+      padding: 10px 12px;
       font-family: var(--mono);
-      font-size: 0.82rem;
-      line-height: 1.5;
-      max-height: 380px;
+      font-size: 0.75rem;
+      line-height: 1.48;
+      max-height: 230px;
       overflow-y: auto;
       white-space: pre-wrap;
       word-break: break-word;
@@ -412,48 +497,96 @@
 
     .unsupported-banner {
       display: none;
-      background: rgba(248, 81, 73, 0.14);
-      border: 1px solid rgba(248, 81, 73, 0.45);
+      background: rgba(251, 113, 133, 0.14);
+      border: 1px solid rgba(251, 113, 133, 0.35);
       color: var(--red);
       padding: 12px 14px;
-      border-radius: 8px;
-      font-size: 0.9rem;
+      border-radius: 14px;
+      font-size: 0.86rem;
     }
 
     .unsupported-banner.visible {
       display: block;
+    }
+
+    @media (min-width: 640px) {
+      body {
+        padding: 28px 20px 48px;
+      }
+
+      .container {
+        gap: 16px;
+      }
+
+      h1 {
+        font-size: 1.55rem;
+      }
+
+      .card {
+        padding: 18px;
+      }
+
+      .options-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 10px;
+      }
+
+      .actions {
+        flex-direction: row;
+        align-items: center;
+      }
+
+      .summary-grid {
+        grid-template-columns: repeat(3, 1fr);
+        gap: 10px;
+      }
+
+      .download-bar {
+        flex-direction: row;
+        align-items: center;
+        justify-content: space-between;
+      }
+
+      .download-actions {
+        flex-direction: row;
+      }
+
+      .terminal {
+        font-size: 0.8rem;
+        max-height: 340px;
+      }
     }
   </style>
 </head>
 <body>
   <div class="container">
     <header>
-      <div>
+      <div class="header-top">
         <h1>IPA ldid Assert Fixer</h1>
-        <p class="subtitle">
-          Repairs <code>ldid.cpp: _assert(): end &gt;= size - 0x10</code> &amp; SideStore
-          <code>IXErrorDomain Code=8</code> ExtensionKit mismatches.
-        </p>
+        <div class="header-actions">
+          <a
+            class="coffee-btn"
+            href="https://buymeacoffee.com/luizhpio"
+            target="_blank"
+            rel="noopener noreferrer"
+            title="Buy Me a Coffee"
+            aria-label="Buy Me a Coffee"
+          >
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <path d="M17 8h1a4 4 0 1 1 0 8h-1"/>
+              <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/>
+              <line x1="6" y1="2" x2="6" y2="4"/>
+              <line x1="10" y1="2" x2="10" y2="4"/>
+              <line x1="14" y1="2" x2="14" y2="4"/>
+            </svg>
+          </a>
+        </div>
       </div>
-      <div class="header-actions">
-        <div class="privacy-badge">Runs 100% locally in your browser &bull; Zero uploads</div>
-        <a
-          class="coffee-btn"
-          href="https://buymeacoffee.com/luizhpio"
-          target="_blank"
-          rel="noopener noreferrer"
-          title="Buy Me a Coffee"
-          aria-label="Buy Me a Coffee"
-        >
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-            <path d="M17 8h1a4 4 0 1 1 0 8h-1"/>
-            <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/>
-            <line x1="6" y1="2" x2="6" y2="4"/>
-            <line x1="10" y1="2" x2="10" y2="4"/>
-            <line x1="14" y1="2" x2="14" y2="4"/>
-          </svg>
-        </a>
-      </div>
+      <div class="privacy-badge">100% Local in Browser &bull; Zero Uploads</div>
+      <p class="subtitle">
+        Fixes <code>ldid.cpp: _assert(): end &gt;= size - 0x10</code> &amp; SideStore
+        <code>IXErrorDomain Code=8</code> mismatches.
+      </p>
     </header>
 
     <div id="unsupportedBanner" class="unsupported-banner">
@@ -463,9 +596,16 @@
     <section class="card">
       <label class="dropzone" id="dropzone" for="fileInput">
         <input id="fileInput" type="file" accept=".ipa,application/octet-stream">
-        <div class="dropzone-title">Drop an .ipa file here, or click to select</div>
+        <span class="dropzone-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+            <polyline points="17 8 12 3 7 8"/>
+            <line x1="12" y1="3" x2="12" y2="15"/>
+          </svg>
+        </span>
+        <div class="dropzone-title">Tap to choose or drop an .ipa</div>
         <div class="dropzone-hint">
-          Only headers and affected binaries are recompressed; assets pass through directly without loading the whole IPA into RAM.
+          Streams headers only — assets pass through without loading the full IPA into RAM.
         </div>
         <div class="selected-file" id="selectedFile">No file selected</div>
       </label>
@@ -475,38 +615,38 @@
           <input type="checkbox" id="optStripExtensionKit" checked>
           <span>
             <span class="option-title">Strip Extensions/ (ExtensionKit)</span>
-            <span class="option-desc">Removes <code>Extensions/</code> (e.g. AppMigrationExtension) that SideStore cannot rewrite, fixing <code>IXErrorDomain Code=8</code> while keeping <code>PlugIns/</code>.</span>
+            <span class="option-desc">Fixes SideStore <code>IXErrorDomain Code=8</code> while keeping <code>PlugIns/</code>.</span>
           </span>
         </label>
 
         <label class="option-item">
           <input type="checkbox" id="optStripPlugIns">
           <span>
-            <span class="option-title">Strip PlugIns/ (Legacy Extensions)</span>
-            <span class="option-desc">Removes Share, Widget, Intents, and Notification extensions to save free Apple ID slots (local notifications still work).</span>
+            <span class="option-title">Strip PlugIns/ (Legacy)</span>
+            <span class="option-desc">Saves free Apple ID slots (local notifications still work).</span>
           </span>
         </label>
 
         <label class="option-item">
           <input type="checkbox" id="optCleanSignatures" checked>
           <span>
-            <span class="option-title">Clean stale _CodeSignature/</span>
-            <span class="option-desc">Removes existing signature folders so SideStore/AltStore can re-sign cleanly.</span>
+            <span class="option-title">Clean _CodeSignature/</span>
+            <span class="option-desc">Removes stale signatures so SideStore signs cleanly.</span>
           </span>
         </label>
 
         <label class="option-item">
           <input type="checkbox" id="optVerbose">
           <span>
-            <span class="option-title">Verbose binary inspection</span>
-            <span class="option-desc">Logs every inspected Mach-O binary and slice details in grey.</span>
+            <span class="option-title">Verbose inspection log</span>
+            <span class="option-desc">Logs every scanned Mach-O binary and slice in grey.</span>
           </span>
         </label>
       </div>
 
       <div class="actions">
-        <button id="btnDryRun" class="btn-secondary" disabled>Analyze Only (Dry Run)</button>
         <button id="btnFix" class="btn-primary" disabled>Fix &amp; Repackage IPA</button>
+        <button id="btnDryRun" class="btn-secondary" disabled>Analyze Only (Dry Run)</button>
         <button id="btnCancel" class="btn-danger" hidden>Cancel</button>
       </div>
 
@@ -524,12 +664,12 @@
     <section id="downloadBar" class="card download-bar">
       <div>
         <strong class="c-green">Repackaged IPA ready</strong>
-        <div id="downloadMeta" class="c-grey" style="font-size: 0.85rem;"></div>
-        <div id="iosShareHint" class="c-grey" style="font-size: 0.8rem; margin-top: 6px;" hidden>
+        <div id="downloadMeta" class="c-grey" style="font-size: 0.82rem;"></div>
+        <div id="iosShareHint" class="c-grey" style="font-size: 0.78rem; margin-top: 6px;" hidden>
           On iPhone/iPad: tap <strong>Download Fixed IPA</strong>, then open <strong>SideStore &rarr; +</strong> (or Safari Downloads &rarr; Share &rarr; SideStore).
         </div>
       </div>
-      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+      <div class="download-actions">
         <a id="downloadLink" class="btn-link btn-download" href="#" download>Download Fixed IPA</a>
         <button id="btnShare" class="btn-secondary" hidden>Share / Open in SideStore</button>
       </div>
