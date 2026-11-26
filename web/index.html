@@ -525,6 +525,9 @@
       <div>
         <strong class="c-green">Repackaged IPA ready</strong>
         <div id="downloadMeta" class="c-grey" style="font-size: 0.85rem;"></div>
+        <div id="iosShareHint" class="c-grey" style="font-size: 0.8rem; margin-top: 6px;" hidden>
+          On iPhone/iPad: tap <strong>Download Fixed IPA</strong>, then open <strong>SideStore &rarr; +</strong> (or Safari Downloads &rarr; Share &rarr; SideStore).
+        </div>
       </div>
       <div style="display: flex; gap: 10px; flex-wrap: wrap;">
         <a id="downloadLink" class="btn-link btn-download" href="#" download>Download Fixed IPA</a>
@@ -605,6 +608,7 @@
       const downloadMeta = document.getElementById("downloadMeta");
       const downloadLink = document.getElementById("downloadLink");
       const btnShare = document.getElementById("btnShare");
+      const iosShareHint = document.getElementById("iosShareHint");
 
       const summaryGrid = document.getElementById("summaryGrid");
       const statScanned = document.getElementById("statScanned");
@@ -662,6 +666,7 @@
         outputBlob = null;
         downloadBar.classList.remove("visible");
         btnShare.hidden = true;
+        iosShareHint.hidden = true;
       }
 
       function updateButtons() {
@@ -834,7 +839,10 @@
                 } catch {
                   btnShare.hidden = true;
                 }
+              } else {
+                btnShare.hidden = true;
               }
+              iosShareHint.hidden = !btnShare.hidden;
 
               appendLogHtml(
                 '<span class="c-green c-bold">\n[✓] Successfully built ' +
