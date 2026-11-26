@@ -3,6 +3,9 @@
   "version": "1.0.0",
   "description": "Zero-dependency isomorphic library, Node CLI, and browser web tool to fix ldid end >= size - 0x10 assertion errors in iOS IPAs.",
   "type": "module",
+  "engines": {
+    "node": ">=24.0.0"
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
