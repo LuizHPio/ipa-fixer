@@ -1,5 +1,7 @@
 # IPA ldid Assert Fixer
 
+[![Buy Me a Coffee](https://img.shields.io/badge/Buy%20Me%20a%20Coffee-ffdd00?style=for-the-badge&logo=buy-me-a-coffee&logoColor=000000)](https://buymeacoffee.com/luizhpio)
+
 A 100% client-side web tool, isomorphic TypeScript/Node.js library, and CLI for fixing:
 
 1. **`ldid.cpp(1461): _assert(): end >= size - 0x10`** — Repairs Mach-O `LC_SYMTAB.strsize` headers when a gap exists before `LC_CODE_SIGNATURE.dataoff`.

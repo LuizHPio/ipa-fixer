@@ -75,6 +75,13 @@
       border: 1px solid var(--border);
     }
 
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-left: auto;
+    }
+
     .privacy-badge {
       display: inline-flex;
       align-items: center;
@@ -87,6 +94,33 @@
       border-radius: 999px;
       padding: 5px 12px;
       white-space: nowrap;
+    }
+
+    .coffee-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 34px;
+      height: 34px;
+      border-radius: 50%;
+      background: #ffdd00;
+      color: #0d1117;
+      border: 1px solid rgba(255, 221, 0, 0.6);
+      text-decoration: none;
+      flex-shrink: 0;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
+    }
+
+    .coffee-btn:hover {
+      background: #ffe74c;
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(255, 221, 0, 0.25);
+    }
+
+    .coffee-btn svg {
+      width: 18px;
+      height: 18px;
+      display: block;
     }
 
     .card {
@@ -397,7 +431,25 @@
           <code>IXErrorDomain Code=8</code> ExtensionKit mismatches.
         </p>
       </div>
-      <div class="privacy-badge">Runs 100% locally in your browser &bull; Zero uploads</div>
+      <div class="header-actions">
+        <div class="privacy-badge">Runs 100% locally in your browser &bull; Zero uploads</div>
+        <a
+          class="coffee-btn"
+          href="https://buymeacoffee.com/luizhpio"
+          target="_blank"
+          rel="noopener noreferrer"
+          title="Buy Me a Coffee"
+          aria-label="Buy Me a Coffee"
+        >
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M17 8h1a4 4 0 1 1 0 8h-1"/>
+            <path d="M3 8h14v9a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4Z"/>
+            <line x1="6" y1="2" x2="6" y2="4"/>
+            <line x1="10" y1="2" x2="10" y2="4"/>
+            <line x1="14" y1="2" x2="14" y2="4"/>
+          </svg>
+        </a>
+      </div>
     </header>
 
     <div id="unsupportedBanner" class="unsupported-banner">
