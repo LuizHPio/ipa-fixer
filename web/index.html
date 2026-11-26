@@ -1,0 +1,853 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IPA ldid Assert Fixer</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface-alt: #1c222b;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #58a6ff;
+      --accent-hover: #79c0ff;
+      --red: #ff7b72;
+      --green: #3fb950;
+      --yellow: #d29922;
+      --cyan: #56d4dd;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 24px 16px 48px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.45rem;
+      letter-spacing: -0.01em;
+    }
+
+    .subtitle {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .subtitle code {
+      font-family: var(--mono);
+      font-size: 0.85em;
+      color: var(--cyan);
+      background: var(--surface);
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+
+    .privacy-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--green);
+      background: rgba(63, 185, 80, 0.12);
+      border: 1px solid rgba(63, 185, 80, 0.35);
+      border-radius: 999px;
+      padding: 5px 12px;
+      white-space: nowrap;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+    }
+
+    .dropzone {
+      display: block;
+      border: 2px dashed var(--border);
+      border-radius: 10px;
+      padding: 28px 18px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease;
+      background: var(--surface-alt);
+    }
+
+    .dropzone:hover,
+    .dropzone.dragover {
+      border-color: var(--accent);
+      background: rgba(88, 166, 255, 0.08);
+    }
+
+    .dropzone input[type="file"] {
+      display: none;
+    }
+
+    .dropzone-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .dropzone-hint {
+      font-size: 0.86rem;
+      color: var(--muted);
+    }
+
+    .selected-file {
+      margin-top: 12px;
+      font-family: var(--mono);
+      font-size: 0.86rem;
+      color: var(--cyan);
+      word-break: break-all;
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .option-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface-alt);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .option-item input {
+      margin-top: 3px;
+      accent-color: var(--accent);
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
+    .option-title {
+      font-size: 0.92rem;
+      font-weight: 600;
+      display: block;
+    }
+
+    .option-desc {
+      font-size: 0.8rem;
+      color: var(--muted);
+      display: block;
+      margin-top: 2px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+      align-items: center;
+    }
+
+    button,
+    .btn-link {
+      appearance: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: #238636;
+      border-color: rgba(240, 246, 252, 0.15);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: #2ea043;
+    }
+
+    .btn-secondary {
+      background: var(--surface-alt);
+      color: var(--text);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      border-color: var(--accent);
+      color: var(--accent-hover);
+    }
+
+    .btn-danger {
+      background: rgba(248, 81, 73, 0.15);
+      border-color: rgba(248, 81, 73, 0.45);
+      color: var(--red);
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background: rgba(248, 81, 73, 0.25);
+    }
+
+    .btn-download {
+      background: #1f6feb;
+      border-color: rgba(240, 246, 252, 0.15);
+      color: #ffffff;
+    }
+
+    .btn-download:hover {
+      background: #388bfd;
+    }
+
+    .progress-wrap {
+      margin-top: 14px;
+      display: none;
+    }
+
+    .progress-wrap.visible {
+      display: block;
+    }
+
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.84rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+      gap: 8px;
+    }
+
+    .progress-file {
+      font-family: var(--mono);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: var(--surface-alt);
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--cyan));
+      transition: width 0.1s linear;
+    }
+
+    .summary-grid {
+      display: none;
+      grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+      gap: 10px;
+    }
+
+    .summary-grid.visible {
+      display: grid;
+    }
+
+    .stat-box {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+
+    .stat-label {
+      font-size: 0.76rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .stat-value {
+      font-size: 1.25rem;
+      font-weight: 700;
+      font-family: var(--mono);
+      margin-top: 2px;
+    }
+
+    .c-red { color: var(--red); }
+    .c-green { color: var(--green); }
+    .c-yellow { color: var(--yellow); }
+    .c-cyan { color: var(--cyan); }
+    .c-grey { color: var(--muted); }
+    .c-bold { font-weight: 700; }
+
+    .download-bar {
+      display: none;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: rgba(63, 185, 80, 0.08);
+      border-color: rgba(63, 185, 80, 0.35);
+    }
+
+    .download-bar.visible {
+      display: flex;
+    }
+
+    .log-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .log-header h2 {
+      margin: 0;
+      font-size: 0.95rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .terminal {
+      background: #0a0d12;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      line-height: 1.5;
+      max-height: 380px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .log-line {
+      margin: 0;
+    }
+
+    .unsupported-banner {
+      display: none;
+      background: rgba(248, 81, 73, 0.14);
+      border: 1px solid rgba(248, 81, 73, 0.45);
+      color: var(--red);
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+
+    .unsupported-banner.visible {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>IPA ldid Assert Fixer</h1>
+        <p class="subtitle">
+          Repairs <code>ldid.cpp: _assert(): end &gt;= size - 0x10</code> &amp; SideStore
+          <code>IXErrorDomain Code=8</code> ExtensionKit mismatches.
+        </p>
+      </div>
+      <div class="privacy-badge">Runs 100% locally in your browser &bull; Zero uploads</div>
+    </header>
+
+    <div id="unsupportedBanner" class="unsupported-banner">
+      Your browser lacks <code>CompressionStream('deflate-raw')</code> or Web Workers (requires Chrome/Edge 103+, Firefox 113+, or Safari 16.4+).
+    </div>
+
+    <section class="card">
+      <label class="dropzone" id="dropzone" for="fileInput">
+        <input id="fileInput" type="file" accept=".ipa,application/octet-stream">
+        <div class="dropzone-title">Drop an .ipa file here, or click to select</div>
+        <div class="dropzone-hint">
+          Only headers and affected binaries are recompressed; assets pass through directly without loading the whole IPA into RAM.
+        </div>
+        <div class="selected-file" id="selectedFile">No file selected</div>
+      </label>
+
+      <div class="options-grid">
+        <label class="option-item">
+          <input type="checkbox" id="optStripExtensionKit" checked>
+          <span>
+            <span class="option-title">Strip Extensions/ (ExtensionKit)</span>
+            <span class="option-desc">Removes <code>Extensions/</code> (e.g. AppMigrationExtension) that SideStore cannot rewrite, fixing <code>IXErrorDomain Code=8</code> while keeping <code>PlugIns/</code>.</span>
+          </span>
+        </label>
+
+        <label class="option-item">
+          <input type="checkbox" id="optStripPlugIns">
+          <span>
+            <span class="option-title">Strip PlugIns/ (Legacy Extensions)</span>
+            <span class="option-desc">Removes Share, Widget, Intents, and Notification extensions to save free Apple ID slots (local notifications still work).</span>
+          </span>
+        </label>
+
+        <label class="option-item">
+          <input type="checkbox" id="optCleanSignatures" checked>
+          <span>
+            <span class="option-title">Clean stale _CodeSignature/</span>
+            <span class="option-desc">Removes existing signature folders so SideStore/AltStore can re-sign cleanly.</span>
+          </span>
+        </label>
+
+        <label class="option-item">
+          <input type="checkbox" id="optVerbose">
+          <span>
+            <span class="option-title">Verbose binary inspection</span>
+            <span class="option-desc">Logs every inspected Mach-O binary and slice details in grey.</span>
+          </span>
+        </label>
+      </div>
+
+      <div class="actions">
+        <button id="btnDryRun" class="btn-secondary" disabled>Analyze Only (Dry Run)</button>
+        <button id="btnFix" class="btn-primary" disabled>Fix &amp; Repackage IPA</button>
+        <button id="btnCancel" class="btn-danger" hidden>Cancel</button>
+      </div>
+
+      <div id="progressWrap" class="progress-wrap">
+        <div class="progress-meta">
+          <span id="progressStage">Preparing...</span>
+          <span id="progressFile" class="progress-file"></span>
+        </div>
+        <div class="progress-bar">
+          <div id="progressFill" class="progress-fill"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="downloadBar" class="card download-bar">
+      <div>
+        <strong class="c-green">Repackaged IPA ready</strong>
+        <div id="downloadMeta" class="c-grey" style="font-size: 0.85rem;"></div>
+      </div>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <a id="downloadLink" class="btn-link btn-download" href="#" download>Download Fixed IPA</a>
+        <button id="btnShare" class="btn-secondary" hidden>Share / Open in SideStore</button>
+      </div>
+    </section>
+
+    <section id="summaryGrid" class="summary-grid">
+      <div class="stat-box">
+        <div class="stat-label">Binaries Scanned</div>
+        <div id="statScanned" class="stat-value">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label" id="statAffectedLabel">Binaries Affected</div>
+        <div id="statAffected" class="stat-value">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label" id="statOffsetsLabel">Offsets Found</div>
+        <div id="statOffsets" class="stat-value">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Signatures Cleaned</div>
+        <div id="statSigs" class="stat-value c-yellow">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Ext Folders Removed</div>
+        <div id="statExts" class="stat-value c-yellow">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Elapsed Time</div>
+        <div id="statTime" class="stat-value c-cyan">0.00s</div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="log-header">
+        <h2>Inspection &amp; Patch Log</h2>
+        <button id="btnClearLog" class="btn-secondary" style="padding: 5px 10px; font-size: 0.78rem;">Clear</button>
+      </div>
+      <div id="terminal" class="terminal"><div class="log-line c-grey">Select an .ipa file to inspect or repair.</div></div>
+    </section>
+  </div>
+
+  <script id="ipa-fixer-worker" type="text/plain">"use strict";(()=>{var ie=new Uint32Array(256);for(let n=0;n<256;n++){let e=n;for(let t=0;t<8;t++)e=(e&1)!==0?3988292384^e>>>1:e>>>1;ie[n]=e>>>0}function W(n,e){let t=n>>>0;for(let i=0;i<e.length;i++){let a=e[i];t=(ie[(t^a)&255]^t>>>8)>>>0}return t>>>0}function X(n){return(n^4294967295)>>>0}var fe=4277009102,Y=3472551422,ue=4277009103,J=3489328638,ge=3405691582,ae=3199925962,oe=3405691583,q=3216703178,be=2,ye=29;function we(n){return n===fe||n===Y||n===ue||n===J}function de(n){return n===fe||n===Y?{is64:!1,littleEndian:n===Y,hdrSize:28}:n===ue||n===J?{is64:!0,littleEndian:n===J,hdrSize:32}:null}function pe(n,e){if(n.length<28)return{sliceInfo:null,patch:null};let t=new DataView(n.buffer,n.byteOffset,n.byteLength),i=t.getUint32(0,!1),a=de(i);if(a===null||n.length<a.hdrSize)return{sliceInfo:null,patch:null};let{littleEndian:r,hdrSize:l}=a,u=t.getUint32(4,r),h=t.getUint32(16,r),m=t.getUint32(20,r),f=Math.min(n.length,l+m),c=l,s=null,o=null,p=null,b=null;for(let d=0;d<h&&!(c+8>f);d++){let S=t.getUint32(c,r),w=t.getUint32(c+4,r);if(w<8||c+w>f)break;S===be&&w>=24?(s=c,o=t.getUint32(c+16,r),p=t.getUint32(c+20,r)):S===ye&&w>=16&&(b=t.getUint32(c+8,r)),c+=w}if(s===null||o===null||p===null||b===null)return{sliceInfo:null,patch:null};if(o===0&&p===0)return{sliceInfo:null,patch:null};let g=b,U=o+p,y=g-U,A={sliceOffset:e,cputype:u,littleEndian:r,stroff:o,strsize:p,sigDataoff:b,end:U,gap:y};if(U<g-16){let d=g-o,S=e+s+20;return{sliceInfo:A,patch:{sliceOffset:e,cputype:u,littleEndian:r,oldStrsize:p,newStrsize:d,oldEnd:U,newEnd:g,gap:y,strsizeFileOffset:S}}}return{sliceInfo:A,patch:null}}var Q=class{reader;head=null;headOffset=0;position=0;ended=!1;constructor(e){this.reader=e.getReader()}get bytesRead(){return this.position}async ensureHead(){for(;this.head===null||this.headOffset>=this.head.length;){if(this.ended)return!1;let{value:e,done:t}=await this.reader.read();if(t||e===void 0)return this.ended=!0,this.head=null,this.headOffset=0,!1;if(e.length>0)return this.head=e,this.headOffset=0,!0}return!0}async readExact(e){if(e===0)return new Uint8Array(0);let t=new Uint8Array(e),i=0;for(;i<e;){if(!await this.ensureHead()||this.head===null)return null;let r=this.head.length-this.headOffset,l=Math.min(r,e-i);t.set(this.head.subarray(this.headOffset,this.headOffset+l),i),this.headOffset+=l,this.position+=l,i+=l}return t}async skipTo(e){if(e<this.position)return!1;for(;this.position<e;){if(!await this.ensureHead()||this.head===null)return!1;let i=this.head.length-this.headOffset,a=e-this.position,r=Math.min(i,a);this.headOffset+=r,this.position+=r}return!0}async close(){try{await this.reader.cancel()}catch{}finally{try{this.reader.releaseLock()}catch{}}}};async function ce(n,e,t){let a=new DataView(e.buffer,e.byteOffset,e.byteLength).getUint32(0,!1),r=de(a);if(r===null)return{valid:!1,sliceInfo:null,patch:null};let l=await n.readExact(r.hdrSize-4);if(l===null)return{valid:!1,sliceInfo:null,patch:null};let u=new Uint8Array(r.hdrSize);u.set(e,0),u.set(l,4);let m=new DataView(u.buffer,u.byteOffset,u.byteLength).getUint32(20,r.littleEndian);if(m>16*1024*1024)return{valid:!1,sliceInfo:null,patch:null};let f=await n.readExact(m);if(f===null)return{valid:!1,sliceInfo:null,patch:null};let c=new Uint8Array(r.hdrSize+m);return c.set(u,0),c.set(f,r.hdrSize),{valid:!0,...pe(c,t)}}async function ee(n,e){let t=new Q(n);try{let i=await t.readExact(4);if(i===null)return{isMachO:!1,slices:[],patches:[]};let r=new DataView(i.buffer,i.byteOffset,i.byteLength).getUint32(0,!1);if(we(r)){let l=await ce(t,i,0);return l.valid?{isMachO:!0,slices:l.sliceInfo?[l.sliceInfo]:[],patches:l.patch?[l.patch]:[]}:{isMachO:!1,slices:[],patches:[]}}if(r===ge||r===ae||r===oe||r===q){let l=r===oe||r===q,u=r===ae||r===q,h=await t.readExact(4);if(h===null)return{isMachO:!1,slices:[],patches:[]};let m=new DataView(h.buffer,h.byteOffset,h.byteLength).getUint32(0,u);if(m<1||m>20)return{isMachO:!1,slices:[],patches:[]};let f=l?32:20,c=8+m*f,s=await t.readExact(m*f);if(s===null)return{isMachO:!1,slices:[],patches:[]};let o=new DataView(s.buffer,s.byteOffset,s.byteLength),p=[];for(let y=0;y<m;y++){let A=y*f,d,S;if(l){let w=o.getBigUint64(A+8,u),C=o.getBigUint64(A+16,u);if(w>BigInt(Number.MAX_SAFE_INTEGER)||C>BigInt(Number.MAX_SAFE_INTEGER))return{isMachO:!1,slices:[],patches:[]};d=Number(w),S=Number(C)}else d=o.getUint32(A+8,u),S=o.getUint32(A+12,u);if(d<c||d+28>e||d+S>e)return{isMachO:!1,slices:[],patches:[]};p.push(d)}p.sort((y,A)=>y-A);let b=[],g=[],U=0;for(let y of p){if(!await t.skipTo(y))break;let d=await t.readExact(4);if(d===null)break;let S=await ce(t,d,y);S.valid&&(U++,S.sliceInfo&&b.push(S.sliceInfo),S.patch&&g.push(S.patch))}return{isMachO:U>0,slices:b,patches:g}}return{isMachO:!1,slices:[],patches:[]}}finally{await t.close()}}function te(n){let e=n.map(r=>{let l=new Uint8Array(4);return new DataView(l.buffer).setUint32(0,r.newStrsize,r.littleEndian),{offset:r.strsizeFileOffset,bytes:l}}),t=0,i=4294967295;return{transform:new TransformStream({transform(r,l){let u=t,h=u+r.length;t=h;let m=null;for(let c of e){let s=c.offset,o=c.offset+4;if(u<o&&h>s){m===null&&(m=new Uint8Array(r.length),m.set(r));let p=Math.max(u,s),b=Math.min(h,o);for(let g=p;g<b;g++)m[g-u]=c.bytes[g-s]}}let f=m!==null?m:(()=>{let c=new Uint8Array(r.length);return c.set(r),c})();i=W(i,f),l.enqueue(f)}}),getResult:()=>({crc32:X(i),uncompressedSize:t})}}var Ie=new TextDecoder("utf-8",{fatal:!1});function R(n,e){if(n>BigInt(Number.MAX_SAFE_INTEGER))throw new Error(`ZIP ${e} exceeds MAX_SAFE_INTEGER`);return Number(n)}async function ne(n){if(n.size<22)throw new Error("File is too small to be a valid ZIP/IPA archive.");let e=Math.min(n.size,65557),t=n.size-e,i=await n.readRange(t,n.size),a=new DataView(i.buffer,i.byteOffset,i.byteLength),r=-1;for(let o=i.length-22;o>=0;o--)if(a.getUint32(o,!0)===101010256){let p=a.getUint16(o+20,!0);if(o+22+p===i.length){r=o;break}}if(r<0)throw new Error("Could not find ZIP End of Central Directory (EOCD) record.");let l=a.getUint16(r+10,!0),u=a.getUint32(r+12,!0),h=a.getUint32(r+16,!0);if(l===65535||u===4294967295||h===4294967295){let o=r-20;if(o<0||a.getUint32(o,!0)!==117853008)throw new Error("ZIP64 indicator set without valid ZIP64 EOCD Locator.");let p=R(a.getBigUint64(o+8,!0),"ZIP64 EOCD offset"),b=await n.readRange(p,p+56);if(b.length<56)throw new Error("Truncated ZIP64 EOCD record.");let g=new DataView(b.buffer,b.byteOffset,b.byteLength);if(g.getUint32(0,!0)!==101075792)throw new Error("Invalid ZIP64 EOCD signature.");l=R(g.getBigUint64(32,!0),"totalEntries"),u=R(g.getBigUint64(40,!0),"cdSize"),h=R(g.getBigUint64(48,!0),"cdOffset")}if(h<0||h+u>n.size)throw new Error("Central Directory bounds exceed archive size.");let m=await n.readRange(h,h+u),f=new DataView(m.buffer,m.byteOffset,m.byteLength),c=[],s=0;for(let o=0;o<l;o++){if(s+46>m.length)throw new Error("Truncated ZIP Central Directory entry.");if(f.getUint32(s,!0)!==33639248)throw new Error(`Invalid Central Directory signature at offset ${h+s}.`);let p=f.getUint16(s+4,!0),b=f.getUint16(s+6,!0),g=f.getUint16(s+8,!0),U=f.getUint16(s+10,!0),y=f.getUint16(s+12,!0),A=f.getUint16(s+14,!0),d=f.getUint32(s+16,!0),S=f.getUint32(s+20,!0),w=f.getUint32(s+24,!0),C=f.getUint16(s+28,!0),M=f.getUint16(s+30,!0),I=f.getUint16(s+32,!0),O=f.getUint16(s+36,!0),E=f.getUint32(s+38,!0),_=f.getUint32(s+42,!0),F=s+46+C+M+I;if(F>m.length)throw new Error("Truncated Central Directory variable-length fields.");let x=new Uint8Array(C);x.set(m.subarray(s+46,s+46+C));let P=Ie.decode(x);if(w===4294967295||S===4294967295||_===4294967295){let L=s+46+C,D=L+M,B=L;for(;B+4<=D;){let me=f.getUint16(B,!0),G=f.getUint16(B+2,!0);if(me===1&&B+4+G<=D){let v=B+4;w===4294967295&&v+8<=B+4+G&&(w=R(f.getBigUint64(v,!0),"uncompressedSize"),v+=8),S===4294967295&&v+8<=B+4+G&&(S=R(f.getBigUint64(v,!0),"compressedSize"),v+=8),_===4294967295&&v+8<=B+4+G&&(_=R(f.getBigUint64(v,!0),"localHeaderOffset"));break}B+=4+G}}let Z=E>>>16&61440,j=P.endsWith("/"),K=Z===40960;c.push({fileName:P,fileNameBytes:x,versionMadeBy:p,versionNeeded:b,flags:g,compressionMethod:U,modTime:y,modDate:A,crc32:d,compressedSize:S,uncompressedSize:w,internalAttr:O,externalAttr:E,localHeaderOffset:_,isDirectory:j,isSymlink:K}),s=F}return c}async function H(n,e){let t=await n.readRange(e.localHeaderOffset,e.localHeaderOffset+30);if(t.length<30)throw new Error(`Truncated Local File Header for ${e.fileName}`);let i=new DataView(t.buffer,t.byteOffset,t.byteLength);if(i.getUint32(0,!0)!==67324752)throw new Error(`Invalid Local File Header signature for ${e.fileName}`);let a=i.getUint16(26,!0),r=i.getUint16(28,!0),l=e.localHeaderOffset+30+a+r,u=l+e.compressedSize;if(u>n.size)throw new Error(`Entry payload exceeds archive bounds for ${e.fileName}`);return{dataStart:l,dataEnd:u}}function V(n,e,t,i){let a=n.streamRange(t,i);if(e.compressionMethod===0)return a;if(e.compressionMethod===8)return a.pipeThrough(new DecompressionStream("deflate-raw"));throw new Error(`Unsupported ZIP compression method ${e.compressionMethod} on ${e.fileName}`)}var N=class{offset=0;records=[];sink;constructor(e){this.sink=e}get bytesWritten(){return this.offset}async writeHeaderAndRecord(e,t,i,a,r){let l=this.offset,u=e.flags&-9,h=i>=4294967295||a>=4294967295,m=h?20:0,f=h?Math.max(e.versionNeeded,45):e.versionNeeded,c=new Uint8Array(30+e.fileNameBytes.length+m),s=new DataView(c.buffer);if(s.setUint32(0,67324752,!0),s.setUint16(4,f,!0),s.setUint16(6,u,!0),s.setUint16(8,r,!0),s.setUint16(10,e.modTime,!0),s.setUint16(12,e.modDate,!0),s.setUint32(14,t>>>0,!0),s.setUint32(18,h?4294967295:i>>>0,!0),s.setUint32(22,h?4294967295:a>>>0,!0),s.setUint16(26,e.fileNameBytes.length,!0),s.setUint16(28,m,!0),c.set(e.fileNameBytes,30),h){let o=30+e.fileNameBytes.length;s.setUint16(o,1,!0),s.setUint16(o+2,16,!0),s.setBigUint64(o+4,BigInt(a),!0),s.setBigUint64(o+12,BigInt(i),!0)}await this.sink.writeBytes(c),this.offset+=c.length,this.records.push({entry:{...e,versionNeeded:h?f:e.versionNeeded},flags:u|e.flags&2048,compressionMethod:r,crc32:t>>>0,compressedSize:i,uncompressedSize:a,localHeaderOffset:l})}async writeRawEntry(e,t,i,a){await this.writeHeaderAndRecord(t,t.crc32,t.compressedSize,t.uncompressedSize,t.compressionMethod);let r=a-i;r>0&&(await this.sink.copySourceRange(e,i,a),this.offset+=r)}async writeCompressedChunksEntry(e,t,i,a,r,l){await this.writeHeaderAndRecord(e,i,a,r,l);for(let u of t)u.length>0&&(await this.sink.writeBytes(u),this.offset+=u.length)}async finalize(){let e=this.offset,t=[],i=0;for(let s of this.records){let{entry:o}=s,p=s.uncompressedSize>=4294967295,b=s.compressedSize>=4294967295,g=s.localHeaderOffset>=4294967295,U=0;p&&(U+=8),b&&(U+=8),g&&(U+=8);let y=U>0?4+U:0,A=new Uint8Array(46+o.fileNameBytes.length+y),d=new DataView(A.buffer),S=U>0?Math.max(o.versionNeeded,45):o.versionNeeded;if(d.setUint32(0,33639248,!0),d.setUint16(4,o.versionMadeBy,!0),d.setUint16(6,S,!0),d.setUint16(8,s.flags,!0),d.setUint16(10,s.compressionMethod,!0),d.setUint16(12,o.modTime,!0),d.setUint16(14,o.modDate,!0),d.setUint32(16,s.crc32>>>0,!0),d.setUint32(20,b?4294967295:s.compressedSize>>>0,!0),d.setUint32(24,p?4294967295:s.uncompressedSize>>>0,!0),d.setUint16(28,o.fileNameBytes.length,!0),d.setUint16(30,y,!0),d.setUint16(32,0,!0),d.setUint16(34,0,!0),d.setUint16(36,o.internalAttr,!0),d.setUint32(38,o.externalAttr>>>0,!0),d.setUint32(42,g?4294967295:s.localHeaderOffset>>>0,!0),A.set(o.fileNameBytes,46),y>0){let w=46+o.fileNameBytes.length;d.setUint16(w,1,!0),d.setUint16(w+2,U,!0),w+=4,p&&(d.setBigUint64(w,BigInt(s.uncompressedSize),!0),w+=8),b&&(d.setBigUint64(w,BigInt(s.compressedSize),!0),w+=8),g&&d.setBigUint64(w,BigInt(s.localHeaderOffset),!0)}t.push(A),i+=A.length}let a=512*1024,r=[],l=0,u=async()=>{if(l===0)return;let s=new Uint8Array(l),o=0;for(let p of r)s.set(p,o),o+=p.length;await this.sink.writeBytes(s),this.offset+=s.length,r=[],l=0};for(let s of t)r.push(s),l+=s.length,l>=a&&await u();await u();let h=this.records.length;if(h>=65535||i>=4294967295||e>=4294967295){let s=this.offset,o=new Uint8Array(56),p=new DataView(o.buffer);p.setUint32(0,101075792,!0),p.setBigUint64(4,44n,!0),p.setUint16(12,45,!0),p.setUint16(14,45,!0),p.setUint32(16,0,!0),p.setUint32(20,0,!0),p.setBigUint64(24,BigInt(h),!0),p.setBigUint64(32,BigInt(h),!0),p.setBigUint64(40,BigInt(i),!0),p.setBigUint64(48,BigInt(e),!0),await this.sink.writeBytes(o),this.offset+=o.length;let b=new Uint8Array(20),g=new DataView(b.buffer);g.setUint32(0,117853008,!0),g.setUint32(4,0,!0),g.setBigUint64(8,BigInt(s),!0),g.setUint32(16,1,!0),await this.sink.writeBytes(b),this.offset+=b.length}let f=new Uint8Array(22),c=new DataView(f.buffer);c.setUint32(0,101010256,!0),c.setUint16(4,0,!0),c.setUint16(6,0,!0),c.setUint16(8,h>=65535?65535:h,!0),c.setUint16(10,h>=65535?65535:h,!0),c.setUint32(12,i>=4294967295?4294967295:i>>>0,!0),c.setUint32(16,e>=4294967295?4294967295:e>>>0,!0),c.setUint16(20,0,!0),await this.sink.writeBytes(f),this.offset+=f.length}};function re(n){return{size:n.size,async readRange(e,t){let i=await n.slice(e,t).arrayBuffer();return new Uint8Array(i)},sliceBlob(e,t){return n.slice(e,t)},streamRange(e,t){return n.slice(e,t).stream()}}}var T=class{parts=[];async writeBytes(e){this.parts.push(e)}async copySourceRange(e,t,i){if(e.sliceBlob!==void 0){this.parts.push(e.sliceBlob(t,i));return}let a=1024*1024;for(let r=t;r<i;r+=a){let l=Math.min(i,r+a);this.parts.push(await e.readRange(r,l))}}toBlob(){return new Blob(this.parts,{type:"application/octet-stream"})}};var Se=new Set([".png",".jpg",".jpeg",".gif",".webp",".svg",".car",".nib",".strings",".plist",".json",".xml",".html",".htm",".css",".js",".m4a",".m4r",".caf",".mp3",".mp4",".mov",".wav",".ttf",".otf",".woff",".woff2",".pdf",".txt",".md",".zip",".xcprivacy",".metallib",".values",".argo",".appexpt",".mobileprovision",".cer",".pem",".crt",".der",".mom",".omo",".icns",".ico",".h",".m",".swift",".tbd",".modulemap",".storyboard",".xib",".stringsdict"]),Ue=/^(Payload\/[^/]+\.app\/Extensions)(?:\/|$)/,Ae=/^(Payload\/[^/]+\.app\/PlugIns)(?:\/|$)/,Ee=/^(.*?_CodeSignature)(?:\/|$)/;function Me(n){let e=n.lastIndexOf("/"),t=e>=0?n.slice(e+1):n,i=t.lastIndexOf(".");if(i<=0)return!0;let a=t.slice(i).toLowerCase();return!Se.has(a)}function k(n){if(n?.aborted)throw n.reason instanceof Error?n.reason:new DOMException("Operation aborted","AbortError")}async function Oe(n,e,t){let a=n.pipeThrough(e.transform).pipeThrough(new CompressionStream("deflate-raw")).getReader(),r=[],l=0;try{for(;;){k(t);let{value:m,done:f}=await a.read();if(f||m===void 0)break;if(m.length>0){let c=new Uint8Array(m.length);c.set(m),r.push(c),l+=c.length}}}catch(m){try{await a.cancel()}catch{}throw m}finally{try{a.releaseLock()}catch{}}let{crc32:u,uncompressedSize:h}=e.getResult();return{chunks:r,compressedSize:l,crc32:u,uncompressedSize:h}}async function he(n,e,t={}){let i=performance.now(),a=!!(t.stripExtensionKit||t.stripExtensions),r=!!(t.stripPlugIns||t.stripExtensions),l=t.cleanSignatures??!0,u=!!(t.dryRun||e===null),h=!!t.scanAllFiles,m=!!t.verbose,f=t.signal,c=M=>{t.onProgress?.(M)};k(f),c({type:"stage",stage:"reading-index",message:"Reading ZIP Central Directory..."});let s=await ne(n);k(f);let o=new Set,p=new Set,b=new Set,g=[],U=0;for(let M of s){k(f);let I=M.fileName;if(a){let O=Ue.exec(I);if(O?.[1]!==void 0){let E=O[1];o.has(E)||(o.add(E),c({type:"remove",category:"extensionkit",path:E,dryRun:u})),U++;continue}}if(r){let O=Ae.exec(I);if(O?.[1]!==void 0){let E=O[1];p.has(E)||(p.add(E),c({type:"remove",category:"plugins",path:E,dryRun:u})),U++;continue}}if(l){let O=Ee.exec(I);if(O?.[1]!==void 0){let E=O[1];b.has(E)||(b.add(E),c({type:"remove",category:"signature",path:E,dryRun:u})),U++;continue}}g.push(M)}c({type:"stage",stage:"scanning",message:u?`Scanning ${g.length} entries for ldid assertion defects...`:`Scanning & repackaging ${g.length} entries...`});let y=!u&&e!==null?new N(e):null,A=0,d=0,S=0,w=[];for(let M=0;M<g.length;M++){k(f);let I=g[M];if(c({type:"progress",completed:M,total:g.length,currentFile:I.fileName}),!I.isDirectory&&!I.isSymlink&&I.uncompressedSize>=28&&(I.compressionMethod===0||I.compressionMethod===8)&&(h||Me(I.fileName))){let{dataStart:E,dataEnd:_}=await H(n,I),F=V(n,I,E,_),x=await ee(F,I.uncompressedSize);if(x.isMachO&&(A++,m&&c({type:"inspect",file:I.fileName,slices:x.slices})),x.patches.length>0){d++,S+=x.patches.length;for(let P of x.patches){let Z={file:I.fileName,offset:P.strsizeFileOffset,oldVal:P.oldStrsize,newVal:P.newStrsize,gap:P.gap,sliceOffset:P.sliceOffset};w.push(Z),c({type:"patch",detail:Z,dryRun:u})}if(y!==null){let P=V(n,I,E,_),Z=te(x.patches),{chunks:j,compressedSize:K,crc32:L,uncompressedSize:D}=await Oe(P,Z,f);if(D!==I.uncompressedSize)throw new Error(`Uncompressed size mismatch after patching ${I.fileName}: expected ${I.uncompressedSize}, got ${D}`);await y.writeCompressedChunksEntry(I,j,L,K,D,8)}continue}y!==null&&await y.writeRawEntry(n,I,E,_);continue}if(y!==null){let{dataStart:E,dataEnd:_}=await H(n,I);await y.writeRawEntry(n,I,E,_)}}c({type:"progress",completed:g.length,total:g.length,currentFile:""}),y!==null&&(c({type:"stage",stage:"writing",message:"Finalizing ZIP Central Directory..."}),await y.finalize());let C=Math.round(performance.now()-i);return c({type:"stage",stage:"done",message:"Complete"}),{binariesScanned:A,binariesAffected:d,offsetsFound:S,extensionKitFoldersRemoved:o.size,plugInsFoldersRemoved:p.size,entriesRemoved:U,signaturesCleaned:b.size,totalEntriesIn:s.length,totalEntriesOut:y!==null?g.length:0,elapsedMs:C,details:w}}async function se(n,e={}){let t=re(n),a=!!e.dryRun?null:new T;return{stats:await he(t,a,e),blob:a!==null?a.toBlob():null}}var $=globalThis,z=null;$.onmessage=async n=>{let e=n.data;if(e.type==="cancel"){z?.abort(new DOMException("Cancelled by user","AbortError"));return}if(e.type==="start"){z?.abort();let t=new AbortController;z=t;let i=0;try{let a=await se(e.file,{stripExtensionKit:e.options.stripExtensionKit,stripPlugIns:e.options.stripPlugIns,cleanSignatures:e.options.cleanSignatures,dryRun:e.options.dryRun,verbose:e.options.verbose,signal:t.signal,onProgress(r){if(r.type==="progress"){let l=performance.now();if(r.completed!==r.total&&l-i<50)return;i=l}$.postMessage({type:"progress",event:r})}});z===t&&(z=null),$.postMessage({type:"done",stats:a.stats,blob:a.blob})}catch(a){z===t&&(z=null);let r=t.signal.aborted||a instanceof DOMException&&a.name==="AbortError",l=a instanceof Error?a.message:String(a);$.postMessage({type:"error",message:l,aborted:r})}}};})();
+</script>
+  <script>
+    (function () {
+      const hasSupport =
+        typeof Worker !== "undefined" &&
+        typeof CompressionStream !== "undefined" &&
+        typeof DecompressionStream !== "undefined" &&
+        typeof Blob !== "undefined";
+
+      const unsupportedBanner = document.getElementById("unsupportedBanner");
+      if (!hasSupport) {
+        unsupportedBanner.classList.add("visible");
+      }
+
+      const fileInput = document.getElementById("fileInput");
+      const dropzone = document.getElementById("dropzone");
+      const selectedFileEl = document.getElementById("selectedFile");
+      const optStripExtensionKit = document.getElementById("optStripExtensionKit");
+      const optStripPlugIns = document.getElementById("optStripPlugIns");
+      const optCleanSignatures = document.getElementById("optCleanSignatures");
+      const optVerbose = document.getElementById("optVerbose");
+
+      const btnDryRun = document.getElementById("btnDryRun");
+      const btnFix = document.getElementById("btnFix");
+      const btnCancel = document.getElementById("btnCancel");
+      const btnClearLog = document.getElementById("btnClearLog");
+
+      const progressWrap = document.getElementById("progressWrap");
+      const progressStage = document.getElementById("progressStage");
+      const progressFile = document.getElementById("progressFile");
+      const progressFill = document.getElementById("progressFill");
+
+      const downloadBar = document.getElementById("downloadBar");
+      const downloadMeta = document.getElementById("downloadMeta");
+      const downloadLink = document.getElementById("downloadLink");
+      const btnShare = document.getElementById("btnShare");
+
+      const summaryGrid = document.getElementById("summaryGrid");
+      const statScanned = document.getElementById("statScanned");
+      const statAffectedLabel = document.getElementById("statAffectedLabel");
+      const statAffected = document.getElementById("statAffected");
+      const statOffsetsLabel = document.getElementById("statOffsetsLabel");
+      const statOffsets = document.getElementById("statOffsets");
+      const statSigs = document.getElementById("statSigs");
+      const statExts = document.getElementById("statExts");
+      const statTime = document.getElementById("statTime");
+      const terminal = document.getElementById("terminal");
+
+      let selectedFile = null;
+      let worker = null;
+      let workerUrl = null;
+      let downloadUrl = null;
+      let outputBlob = null;
+      let outputFileName = "";
+      let running = false;
+
+      function formatBytes(bytes) {
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+        return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+      }
+
+      function hex(n) {
+        return "0x" + (n >>> 0).toString(16);
+      }
+
+      function escapeText(str) {
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
+      function appendLogHtml(html) {
+        const div = document.createElement("div");
+        div.className = "log-line";
+        div.innerHTML = html;
+        terminal.appendChild(div);
+        terminal.scrollTop = terminal.scrollHeight;
+      }
+
+      function clearLog() {
+        terminal.innerHTML = "";
+      }
+
+      function revokeDownload() {
+        if (downloadUrl) {
+          URL.revokeObjectURL(downloadUrl);
+          downloadUrl = null;
+        }
+        outputBlob = null;
+        downloadBar.classList.remove("visible");
+        btnShare.hidden = true;
+      }
+
+      function updateButtons() {
+        const canRun = hasSupport && selectedFile !== null && !running;
+        btnDryRun.disabled = !canRun;
+        btnFix.disabled = !canRun;
+        btnCancel.hidden = !running;
+      }
+
+      function setSelectedFile(file) {
+        selectedFile = file || null;
+        revokeDownload();
+        if (selectedFile) {
+          selectedFileEl.textContent = selectedFile.name + " (" + formatBytes(selectedFile.size) + ")";
+        } else {
+          selectedFileEl.textContent = "No file selected";
+        }
+        updateButtons();
+      }
+
+      fileInput.addEventListener("change", () => {
+        setSelectedFile(fileInput.files && fileInput.files[0]);
+      });
+
+      dropzone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropzone.classList.add("dragover");
+      });
+
+      dropzone.addEventListener("dragleave", () => {
+        dropzone.classList.remove("dragover");
+      });
+
+      dropzone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropzone.classList.remove("dragover");
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+          setSelectedFile(e.dataTransfer.files[0]);
+        }
+      });
+
+      btnClearLog.addEventListener("click", () => {
+        clearLog();
+      });
+
+      function ensureWorker() {
+        if (worker) return worker;
+        const workerCode = document.getElementById("ipa-fixer-worker").textContent || "";
+        const blob = new Blob([workerCode], { type: "text/javascript" });
+        workerUrl = URL.createObjectURL(blob);
+        worker = new Worker(workerUrl);
+        return worker;
+      }
+
+      function renderSummary(stats, dryRun) {
+        summaryGrid.classList.add("visible");
+        statScanned.textContent = String(stats.binariesScanned);
+
+        statAffectedLabel.textContent = dryRun ? "Needing Repair" : "Binaries Repaired";
+        statAffected.textContent = String(stats.binariesAffected);
+        statAffected.className = "stat-value " + (stats.binariesAffected === 0 ? "c-green" : dryRun ? "c-red" : "c-green");
+
+        statOffsetsLabel.textContent = dryRun ? "Invalid Offsets" : "Offsets Corrected";
+        statOffsets.textContent = String(stats.offsetsFound);
+        statOffsets.className = "stat-value " + (stats.offsetsFound === 0 ? "c-green" : dryRun ? "c-red" : "c-green");
+
+        statSigs.textContent = String(stats.signaturesCleaned);
+        statExts.textContent = String(stats.extensionKitFoldersRemoved + stats.plugInsFoldersRemoved);
+        statTime.textContent = (stats.elapsedMs / 1000).toFixed(2) + "s";
+      }
+
+      function handleProgressEvent(ev) {
+        switch (ev.type) {
+          case "stage": {
+            progressStage.textContent = ev.message;
+            if (ev.stage !== "done") {
+              appendLogHtml('<span class="c-cyan">[*]</span> ' + escapeText(ev.message));
+            }
+            break;
+          }
+          case "remove": {
+            const label =
+              ev.category === "signature"
+                ? "stale signature"
+                : ev.category === "extensionkit"
+                  ? "Extensions (ExtensionKit) folder"
+                  : "PlugIns folder";
+            const action = ev.dryRun ? "Would remove" : "Removing";
+            const cls = ev.dryRun ? "c-yellow" : "c-red";
+            appendLogHtml(
+              '<span class="c-cyan">[*]</span> <span class="' + cls + '">' +
+                escapeText(action + " " + label + ":") + "</span> " + escapeText(ev.path)
+            );
+            break;
+          }
+          case "inspect": {
+            appendLogHtml('<span class="c-grey">  [+] Inspecting: ' + escapeText(ev.file) + "</span>");
+            for (const s of ev.slices) {
+              appendLogHtml(
+                '<span class="c-grey">      [Slice at ' + hex(s.sliceOffset) +
+                  "] LC_SYMTAB end=" + hex(s.end) +
+                  ", LC_CODE_SIGNATURE=" + hex(s.sigDataoff) +
+                  ", gap=" + s.gap + " bytes</span>"
+              );
+            }
+            break;
+          }
+          case "patch": {
+            const action = ev.dryRun ? "Would patch" : "Patched";
+            const cls = ev.dryRun ? "c-red" : "c-green";
+            const d = ev.detail;
+            appendLogHtml(
+              '  <span class="' + cls + ' c-bold">[!] ' + escapeText(action + " " + d.file + ":") + "</span>\n" +
+                '      Offset <span class="c-yellow">' + hex(d.offset) + "</span>: " +
+                'strsize <span class="c-red">' + hex(d.oldVal) + '</span> -&gt; <span class="c-green">' + hex(d.newVal) + "</span> " +
+                '(bridged gap of <span class="c-cyan c-bold">' + d.gap.toLocaleString("en-US") + " bytes</span>)"
+            );
+            break;
+          }
+          case "progress": {
+            const pct = ev.total > 0 ? Math.round((ev.completed / ev.total) * 100) : 0;
+            progressFill.style.width = pct + "%";
+            progressFile.textContent = ev.currentFile ? ev.completed + "/" + ev.total + " • " + ev.currentFile : "";
+            break;
+          }
+        }
+      }
+
+      function startRun(dryRun) {
+        if (!selectedFile || running) return;
+        running = true;
+        revokeDownload();
+        clearLog();
+        summaryGrid.classList.remove("visible");
+        progressWrap.classList.add("visible");
+        progressFill.style.width = "0%";
+        progressStage.textContent = "Starting...";
+        progressFile.textContent = "";
+        updateButtons();
+
+        const w = ensureWorker();
+
+        w.onmessage = (ev) => {
+          const msg = ev.data;
+          if (msg.type === "progress") {
+            handleProgressEvent(msg.event);
+          } else if (msg.type === "done") {
+            running = false;
+            progressFill.style.width = "100%";
+            progressFile.textContent = "";
+            progressStage.textContent = dryRun ? "Analysis complete" : "Repackage complete";
+            renderSummary(msg.stats, dryRun);
+
+            if (dryRun) {
+              appendLogHtml('<span class="c-yellow c-bold">\n[*] Dry run complete. No files were modified or repackaged.</span>');
+            } else if (msg.blob) {
+              outputBlob = msg.blob;
+              const base = selectedFile.name.replace(/\.ipa$/i, "");
+              outputFileName = base + "_fixed.ipa";
+              downloadUrl = URL.createObjectURL(outputBlob);
+              downloadLink.href = downloadUrl;
+              downloadLink.download = outputFileName;
+              downloadMeta.textContent = outputFileName + " • " + formatBytes(outputBlob.size) + " • " + (msg.stats.elapsedMs / 1000).toFixed(2) + "s";
+              downloadBar.classList.add("visible");
+
+              if (typeof navigator.share === "function" && typeof navigator.canShare === "function") {
+                try {
+                  const shareFile = new File([outputBlob], outputFileName, { type: "application/octet-stream" });
+                  btnShare.hidden = !navigator.canShare({ files: [shareFile] });
+                } catch {
+                  btnShare.hidden = true;
+                }
+              }
+
+              appendLogHtml(
+                '<span class="c-green c-bold">\n[✓] Successfully built ' +
+                  escapeText(outputFileName) + " (" + outputBlob.size.toLocaleString("en-US") + " bytes)</span>"
+              );
+            }
+            updateButtons();
+          } else if (msg.type === "error") {
+            running = false;
+            progressStage.textContent = msg.aborted ? "Cancelled" : "Failed";
+            appendLogHtml(
+              '<span class="' + (msg.aborted ? "c-yellow" : "c-red") + ' c-bold">' +
+                (msg.aborted ? "[*] Cancelled." : "[X] Error: " + escapeText(msg.message)) +
+                "</span>"
+            );
+            updateButtons();
+          }
+        };
+
+        w.onerror = (err) => {
+          running = false;
+          progressStage.textContent = "Worker error";
+          appendLogHtml('<span class="c-red c-bold">[X] Worker error: ' + escapeText(err.message || "Unknown") + "</span>");
+          updateButtons();
+        };
+
+        w.postMessage({
+          type: "start",
+          file: selectedFile,
+          options: {
+            stripExtensionKit: optStripExtensionKit.checked,
+            stripPlugIns: optStripPlugIns.checked,
+            cleanSignatures: optCleanSignatures.checked,
+            dryRun,
+            verbose: optVerbose.checked,
+          },
+        });
+      }
+
+      btnDryRun.addEventListener("click", () => startRun(true));
+      btnFix.addEventListener("click", () => startRun(false));
+
+      btnCancel.addEventListener("click", () => {
+        if (worker && running) {
+          progressStage.textContent = "Cancelling...";
+          worker.postMessage({ type: "cancel" });
+        }
+      });
+
+      btnShare.addEventListener("click", async () => {
+        if (!outputBlob || !outputFileName) return;
+        try {
+          const shareFile = new File([outputBlob], outputFileName, { type: "application/octet-stream" });
+          await navigator.share({
+            files: [shareFile],
+            title: outputFileName,
+          });
+        } catch (err) {
+          if (!(err instanceof DOMException && err.name === "AbortError")) {
+            appendLogHtml('<span class="c-red">[!] Share failed: ' + escapeText(String(err)) + "</span>");
+          }
+        }
+      });
+
+      window.addEventListener("beforeunload", () => {
+        revokeDownload();
+        if (workerUrl) URL.revokeObjectURL(workerUrl);
+      });
+    })();
+  </script>
+</body>
+</html>

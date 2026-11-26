@@ -1,0 +1,852 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>IPA ldid Assert Fixer</title>
+  <style>
+    :root {
+      --bg: #0d1117;
+      --surface: #161b22;
+      --surface-alt: #1c222b;
+      --border: #30363d;
+      --text: #e6edf3;
+      --muted: #8b949e;
+      --accent: #58a6ff;
+      --accent-hover: #79c0ff;
+      --red: #ff7b72;
+      --green: #3fb950;
+      --yellow: #d29922;
+      --cyan: #56d4dd;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+      --sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 24px 16px 48px;
+      background: var(--bg);
+      color: var(--text);
+      font-family: var(--sans);
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+    }
+
+    header {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px solid var(--border);
+    }
+
+    h1 {
+      margin: 0;
+      font-size: 1.45rem;
+      letter-spacing: -0.01em;
+    }
+
+    .subtitle {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.92rem;
+    }
+
+    .subtitle code {
+      font-family: var(--mono);
+      font-size: 0.85em;
+      color: var(--cyan);
+      background: var(--surface);
+      padding: 2px 6px;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+    }
+
+    .privacy-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--green);
+      background: rgba(63, 185, 80, 0.12);
+      border: 1px solid rgba(63, 185, 80, 0.35);
+      border-radius: 999px;
+      padding: 5px 12px;
+      white-space: nowrap;
+    }
+
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 18px;
+    }
+
+    .dropzone {
+      display: block;
+      border: 2px dashed var(--border);
+      border-radius: 10px;
+      padding: 28px 18px;
+      text-align: center;
+      cursor: pointer;
+      transition: border-color 0.15s ease, background 0.15s ease;
+      background: var(--surface-alt);
+    }
+
+    .dropzone:hover,
+    .dropzone.dragover {
+      border-color: var(--accent);
+      background: rgba(88, 166, 255, 0.08);
+    }
+
+    .dropzone input[type="file"] {
+      display: none;
+    }
+
+    .dropzone-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+
+    .dropzone-hint {
+      font-size: 0.86rem;
+      color: var(--muted);
+    }
+
+    .selected-file {
+      margin-top: 12px;
+      font-family: var(--mono);
+      font-size: 0.86rem;
+      color: var(--cyan);
+      word-break: break-all;
+    }
+
+    .options-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 12px;
+      margin-top: 14px;
+    }
+
+    .option-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 10px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      background: var(--surface-alt);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .option-item input {
+      margin-top: 3px;
+      accent-color: var(--accent);
+      width: 16px;
+      height: 16px;
+      flex-shrink: 0;
+    }
+
+    .option-title {
+      font-size: 0.92rem;
+      font-weight: 600;
+      display: block;
+    }
+
+    .option-desc {
+      font-size: 0.8rem;
+      color: var(--muted);
+      display: block;
+      margin-top: 2px;
+    }
+
+    .actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+      align-items: center;
+    }
+
+    button,
+    .btn-link {
+      appearance: none;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 16px;
+      font-size: 0.92rem;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      transition: background 0.15s ease, border-color 0.15s ease, opacity 0.15s ease;
+    }
+
+    button:disabled {
+      opacity: 0.45;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: #238636;
+      border-color: rgba(240, 246, 252, 0.15);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      background: #2ea043;
+    }
+
+    .btn-secondary {
+      background: var(--surface-alt);
+      color: var(--text);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      border-color: var(--accent);
+      color: var(--accent-hover);
+    }
+
+    .btn-danger {
+      background: rgba(248, 81, 73, 0.15);
+      border-color: rgba(248, 81, 73, 0.45);
+      color: var(--red);
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background: rgba(248, 81, 73, 0.25);
+    }
+
+    .btn-download {
+      background: #1f6feb;
+      border-color: rgba(240, 246, 252, 0.15);
+      color: #ffffff;
+    }
+
+    .btn-download:hover {
+      background: #388bfd;
+    }
+
+    .progress-wrap {
+      margin-top: 14px;
+      display: none;
+    }
+
+    .progress-wrap.visible {
+      display: block;
+    }
+
+    .progress-meta {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.84rem;
+      color: var(--muted);
+      margin-bottom: 6px;
+      gap: 8px;
+    }
+
+    .progress-file {
+      font-family: var(--mono);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .progress-bar {
+      width: 100%;
+      height: 8px;
+      background: var(--surface-alt);
+      border-radius: 999px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+
+    .progress-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--accent), var(--cyan));
+      transition: width 0.1s linear;
+    }
+
+    .summary-grid {
+      display: none;
+      grid-template-columns: repeat(auto-fit, minmax(145px, 1fr));
+      gap: 10px;
+    }
+
+    .summary-grid.visible {
+      display: grid;
+    }
+
+    .stat-box {
+      background: var(--surface-alt);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+    }
+
+    .stat-label {
+      font-size: 0.76rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+
+    .stat-value {
+      font-size: 1.25rem;
+      font-weight: 700;
+      font-family: var(--mono);
+      margin-top: 2px;
+    }
+
+    .c-red { color: var(--red); }
+    .c-green { color: var(--green); }
+    .c-yellow { color: var(--yellow); }
+    .c-cyan { color: var(--cyan); }
+    .c-grey { color: var(--muted); }
+    .c-bold { font-weight: 700; }
+
+    .download-bar {
+      display: none;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      background: rgba(63, 185, 80, 0.08);
+      border-color: rgba(63, 185, 80, 0.35);
+    }
+
+    .download-bar.visible {
+      display: flex;
+    }
+
+    .log-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .log-header h2 {
+      margin: 0;
+      font-size: 0.95rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .terminal {
+      background: #0a0d12;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 12px 14px;
+      font-family: var(--mono);
+      font-size: 0.82rem;
+      line-height: 1.5;
+      max-height: 380px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    .log-line {
+      margin: 0;
+    }
+
+    .unsupported-banner {
+      display: none;
+      background: rgba(248, 81, 73, 0.14);
+      border: 1px solid rgba(248, 81, 73, 0.45);
+      color: var(--red);
+      padding: 12px 14px;
+      border-radius: 8px;
+      font-size: 0.9rem;
+    }
+
+    .unsupported-banner.visible {
+      display: block;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>IPA ldid Assert Fixer</h1>
+        <p class="subtitle">
+          Repairs <code>ldid.cpp: _assert(): end &gt;= size - 0x10</code> &amp; SideStore
+          <code>IXErrorDomain Code=8</code> ExtensionKit mismatches.
+        </p>
+      </div>
+      <div class="privacy-badge">Runs 100% locally in your browser &bull; Zero uploads</div>
+    </header>
+
+    <div id="unsupportedBanner" class="unsupported-banner">
+      Your browser lacks <code>CompressionStream('deflate-raw')</code> or Web Workers (requires Chrome/Edge 103+, Firefox 113+, or Safari 16.4+).
+    </div>
+
+    <section class="card">
+      <label class="dropzone" id="dropzone" for="fileInput">
+        <input id="fileInput" type="file" accept=".ipa,application/octet-stream">
+        <div class="dropzone-title">Drop an .ipa file here, or click to select</div>
+        <div class="dropzone-hint">
+          Only headers and affected binaries are recompressed; assets pass through directly without loading the whole IPA into RAM.
+        </div>
+        <div class="selected-file" id="selectedFile">No file selected</div>
+      </label>
+
+      <div class="options-grid">
+        <label class="option-item">
+          <input type="checkbox" id="optStripExtensionKit" checked>
+          <span>
+            <span class="option-title">Strip Extensions/ (ExtensionKit)</span>
+            <span class="option-desc">Removes <code>Extensions/</code> (e.g. AppMigrationExtension) that SideStore cannot rewrite, fixing <code>IXErrorDomain Code=8</code> while keeping <code>PlugIns/</code>.</span>
+          </span>
+        </label>
+
+        <label class="option-item">
+          <input type="checkbox" id="optStripPlugIns">
+          <span>
+            <span class="option-title">Strip PlugIns/ (Legacy Extensions)</span>
+            <span class="option-desc">Removes Share, Widget, Intents, and Notification extensions to save free Apple ID slots (local notifications still work).</span>
+          </span>
+        </label>
+
+        <label class="option-item">
+          <input type="checkbox" id="optCleanSignatures" checked>
+          <span>
+            <span class="option-title">Clean stale _CodeSignature/</span>
+            <span class="option-desc">Removes existing signature folders so SideStore/AltStore can re-sign cleanly.</span>
+          </span>
+        </label>
+
+        <label class="option-item">
+          <input type="checkbox" id="optVerbose">
+          <span>
+            <span class="option-title">Verbose binary inspection</span>
+            <span class="option-desc">Logs every inspected Mach-O binary and slice details in grey.</span>
+          </span>
+        </label>
+      </div>
+
+      <div class="actions">
+        <button id="btnDryRun" class="btn-secondary" disabled>Analyze Only (Dry Run)</button>
+        <button id="btnFix" class="btn-primary" disabled>Fix &amp; Repackage IPA</button>
+        <button id="btnCancel" class="btn-danger" hidden>Cancel</button>
+      </div>
+
+      <div id="progressWrap" class="progress-wrap">
+        <div class="progress-meta">
+          <span id="progressStage">Preparing...</span>
+          <span id="progressFile" class="progress-file"></span>
+        </div>
+        <div class="progress-bar">
+          <div id="progressFill" class="progress-fill"></div>
+        </div>
+      </div>
+    </section>
+
+    <section id="downloadBar" class="card download-bar">
+      <div>
+        <strong class="c-green">Repackaged IPA ready</strong>
+        <div id="downloadMeta" class="c-grey" style="font-size: 0.85rem;"></div>
+      </div>
+      <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+        <a id="downloadLink" class="btn-link btn-download" href="#" download>Download Fixed IPA</a>
+        <button id="btnShare" class="btn-secondary" hidden>Share / Open in SideStore</button>
+      </div>
+    </section>
+
+    <section id="summaryGrid" class="summary-grid">
+      <div class="stat-box">
+        <div class="stat-label">Binaries Scanned</div>
+        <div id="statScanned" class="stat-value">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label" id="statAffectedLabel">Binaries Affected</div>
+        <div id="statAffected" class="stat-value">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label" id="statOffsetsLabel">Offsets Found</div>
+        <div id="statOffsets" class="stat-value">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Signatures Cleaned</div>
+        <div id="statSigs" class="stat-value c-yellow">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Ext Folders Removed</div>
+        <div id="statExts" class="stat-value c-yellow">0</div>
+      </div>
+      <div class="stat-box">
+        <div class="stat-label">Elapsed Time</div>
+        <div id="statTime" class="stat-value c-cyan">0.00s</div>
+      </div>
+    </section>
+
+    <section class="card">
+      <div class="log-header">
+        <h2>Inspection &amp; Patch Log</h2>
+        <button id="btnClearLog" class="btn-secondary" style="padding: 5px 10px; font-size: 0.78rem;">Clear</button>
+      </div>
+      <div id="terminal" class="terminal"><div class="log-line c-grey">Select an .ipa file to inspect or repair.</div></div>
+    </section>
+  </div>
+
+  <script id="ipa-fixer-worker" type="text/plain">/*__EMBEDDED_WORKER__*/</script>
+  <script>
+    (function () {
+      const hasSupport =
+        typeof Worker !== "undefined" &&
+        typeof CompressionStream !== "undefined" &&
+        typeof DecompressionStream !== "undefined" &&
+        typeof Blob !== "undefined";
+
+      const unsupportedBanner = document.getElementById("unsupportedBanner");
+      if (!hasSupport) {
+        unsupportedBanner.classList.add("visible");
+      }
+
+      const fileInput = document.getElementById("fileInput");
+      const dropzone = document.getElementById("dropzone");
+      const selectedFileEl = document.getElementById("selectedFile");
+      const optStripExtensionKit = document.getElementById("optStripExtensionKit");
+      const optStripPlugIns = document.getElementById("optStripPlugIns");
+      const optCleanSignatures = document.getElementById("optCleanSignatures");
+      const optVerbose = document.getElementById("optVerbose");
+
+      const btnDryRun = document.getElementById("btnDryRun");
+      const btnFix = document.getElementById("btnFix");
+      const btnCancel = document.getElementById("btnCancel");
+      const btnClearLog = document.getElementById("btnClearLog");
+
+      const progressWrap = document.getElementById("progressWrap");
+      const progressStage = document.getElementById("progressStage");
+      const progressFile = document.getElementById("progressFile");
+      const progressFill = document.getElementById("progressFill");
+
+      const downloadBar = document.getElementById("downloadBar");
+      const downloadMeta = document.getElementById("downloadMeta");
+      const downloadLink = document.getElementById("downloadLink");
+      const btnShare = document.getElementById("btnShare");
+
+      const summaryGrid = document.getElementById("summaryGrid");
+      const statScanned = document.getElementById("statScanned");
+      const statAffectedLabel = document.getElementById("statAffectedLabel");
+      const statAffected = document.getElementById("statAffected");
+      const statOffsetsLabel = document.getElementById("statOffsetsLabel");
+      const statOffsets = document.getElementById("statOffsets");
+      const statSigs = document.getElementById("statSigs");
+      const statExts = document.getElementById("statExts");
+      const statTime = document.getElementById("statTime");
+      const terminal = document.getElementById("terminal");
+
+      let selectedFile = null;
+      let worker = null;
+      let workerUrl = null;
+      let downloadUrl = null;
+      let outputBlob = null;
+      let outputFileName = "";
+      let running = false;
+
+      function formatBytes(bytes) {
+        if (bytes < 1024) return bytes + " B";
+        if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+        return (bytes / (1024 * 1024)).toFixed(2) + " MB";
+      }
+
+      function hex(n) {
+        return "0x" + (n >>> 0).toString(16);
+      }
+
+      function escapeText(str) {
+        return String(str)
+          .replace(/&/g, "&amp;")
+          .replace(/</g, "&lt;")
+          .replace(/>/g, "&gt;");
+      }
+
+      function appendLogHtml(html) {
+        const div = document.createElement("div");
+        div.className = "log-line";
+        div.innerHTML = html;
+        terminal.appendChild(div);
+        terminal.scrollTop = terminal.scrollHeight;
+      }
+
+      function clearLog() {
+        terminal.innerHTML = "";
+      }
+
+      function revokeDownload() {
+        if (downloadUrl) {
+          URL.revokeObjectURL(downloadUrl);
+          downloadUrl = null;
+        }
+        outputBlob = null;
+        downloadBar.classList.remove("visible");
+        btnShare.hidden = true;
+      }
+
+      function updateButtons() {
+        const canRun = hasSupport && selectedFile !== null && !running;
+        btnDryRun.disabled = !canRun;
+        btnFix.disabled = !canRun;
+        btnCancel.hidden = !running;
+      }
+
+      function setSelectedFile(file) {
+        selectedFile = file || null;
+        revokeDownload();
+        if (selectedFile) {
+          selectedFileEl.textContent = selectedFile.name + " (" + formatBytes(selectedFile.size) + ")";
+        } else {
+          selectedFileEl.textContent = "No file selected";
+        }
+        updateButtons();
+      }
+
+      fileInput.addEventListener("change", () => {
+        setSelectedFile(fileInput.files && fileInput.files[0]);
+      });
+
+      dropzone.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        dropzone.classList.add("dragover");
+      });
+
+      dropzone.addEventListener("dragleave", () => {
+        dropzone.classList.remove("dragover");
+      });
+
+      dropzone.addEventListener("drop", (e) => {
+        e.preventDefault();
+        dropzone.classList.remove("dragover");
+        if (e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0]) {
+          setSelectedFile(e.dataTransfer.files[0]);
+        }
+      });
+
+      btnClearLog.addEventListener("click", () => {
+        clearLog();
+      });
+
+      function ensureWorker() {
+        if (worker) return worker;
+        const workerCode = document.getElementById("ipa-fixer-worker").textContent || "";
+        const blob = new Blob([workerCode], { type: "text/javascript" });
+        workerUrl = URL.createObjectURL(blob);
+        worker = new Worker(workerUrl);
+        return worker;
+      }
+
+      function renderSummary(stats, dryRun) {
+        summaryGrid.classList.add("visible");
+        statScanned.textContent = String(stats.binariesScanned);
+
+        statAffectedLabel.textContent = dryRun ? "Needing Repair" : "Binaries Repaired";
+        statAffected.textContent = String(stats.binariesAffected);
+        statAffected.className = "stat-value " + (stats.binariesAffected === 0 ? "c-green" : dryRun ? "c-red" : "c-green");
+
+        statOffsetsLabel.textContent = dryRun ? "Invalid Offsets" : "Offsets Corrected";
+        statOffsets.textContent = String(stats.offsetsFound);
+        statOffsets.className = "stat-value " + (stats.offsetsFound === 0 ? "c-green" : dryRun ? "c-red" : "c-green");
+
+        statSigs.textContent = String(stats.signaturesCleaned);
+        statExts.textContent = String(stats.extensionKitFoldersRemoved + stats.plugInsFoldersRemoved);
+        statTime.textContent = (stats.elapsedMs / 1000).toFixed(2) + "s";
+      }
+
+      function handleProgressEvent(ev) {
+        switch (ev.type) {
+          case "stage": {
+            progressStage.textContent = ev.message;
+            if (ev.stage !== "done") {
+              appendLogHtml('<span class="c-cyan">[*]</span> ' + escapeText(ev.message));
+            }
+            break;
+          }
+          case "remove": {
+            const label =
+              ev.category === "signature"
+                ? "stale signature"
+                : ev.category === "extensionkit"
+                  ? "Extensions (ExtensionKit) folder"
+                  : "PlugIns folder";
+            const action = ev.dryRun ? "Would remove" : "Removing";
+            const cls = ev.dryRun ? "c-yellow" : "c-red";
+            appendLogHtml(
+              '<span class="c-cyan">[*]</span> <span class="' + cls + '">' +
+                escapeText(action + " " + label + ":") + "</span> " + escapeText(ev.path)
+            );
+            break;
+          }
+          case "inspect": {
+            appendLogHtml('<span class="c-grey">  [+] Inspecting: ' + escapeText(ev.file) + "</span>");
+            for (const s of ev.slices) {
+              appendLogHtml(
+                '<span class="c-grey">      [Slice at ' + hex(s.sliceOffset) +
+                  "] LC_SYMTAB end=" + hex(s.end) +
+                  ", LC_CODE_SIGNATURE=" + hex(s.sigDataoff) +
+                  ", gap=" + s.gap + " bytes</span>"
+              );
+            }
+            break;
+          }
+          case "patch": {
+            const action = ev.dryRun ? "Would patch" : "Patched";
+            const cls = ev.dryRun ? "c-red" : "c-green";
+            const d = ev.detail;
+            appendLogHtml(
+              '  <span class="' + cls + ' c-bold">[!] ' + escapeText(action + " " + d.file + ":") + "</span>\n" +
+                '      Offset <span class="c-yellow">' + hex(d.offset) + "</span>: " +
+                'strsize <span class="c-red">' + hex(d.oldVal) + '</span> -&gt; <span class="c-green">' + hex(d.newVal) + "</span> " +
+                '(bridged gap of <span class="c-cyan c-bold">' + d.gap.toLocaleString("en-US") + " bytes</span>)"
+            );
+            break;
+          }
+          case "progress": {
+            const pct = ev.total > 0 ? Math.round((ev.completed / ev.total) * 100) : 0;
+            progressFill.style.width = pct + "%";
+            progressFile.textContent = ev.currentFile ? ev.completed + "/" + ev.total + " • " + ev.currentFile : "";
+            break;
+          }
+        }
+      }
+
+      function startRun(dryRun) {
+        if (!selectedFile || running) return;
+        running = true;
+        revokeDownload();
+        clearLog();
+        summaryGrid.classList.remove("visible");
+        progressWrap.classList.add("visible");
+        progressFill.style.width = "0%";
+        progressStage.textContent = "Starting...";
+        progressFile.textContent = "";
+        updateButtons();
+
+        const w = ensureWorker();
+
+        w.onmessage = (ev) => {
+          const msg = ev.data;
+          if (msg.type === "progress") {
+            handleProgressEvent(msg.event);
+          } else if (msg.type === "done") {
+            running = false;
+            progressFill.style.width = "100%";
+            progressFile.textContent = "";
+            progressStage.textContent = dryRun ? "Analysis complete" : "Repackage complete";
+            renderSummary(msg.stats, dryRun);
+
+            if (dryRun) {
+              appendLogHtml('<span class="c-yellow c-bold">\n[*] Dry run complete. No files were modified or repackaged.</span>');
+            } else if (msg.blob) {
+              outputBlob = msg.blob;
+              const base = selectedFile.name.replace(/\.ipa$/i, "");
+              outputFileName = base + "_fixed.ipa";
+              downloadUrl = URL.createObjectURL(outputBlob);
+              downloadLink.href = downloadUrl;
+              downloadLink.download = outputFileName;
+              downloadMeta.textContent = outputFileName + " • " + formatBytes(outputBlob.size) + " • " + (msg.stats.elapsedMs / 1000).toFixed(2) + "s";
+              downloadBar.classList.add("visible");
+
+              if (typeof navigator.share === "function" && typeof navigator.canShare === "function") {
+                try {
+                  const shareFile = new File([outputBlob], outputFileName, { type: "application/octet-stream" });
+                  btnShare.hidden = !navigator.canShare({ files: [shareFile] });
+                } catch {
+                  btnShare.hidden = true;
+                }
+              }
+
+              appendLogHtml(
+                '<span class="c-green c-bold">\n[✓] Successfully built ' +
+                  escapeText(outputFileName) + " (" + outputBlob.size.toLocaleString("en-US") + " bytes)</span>"
+              );
+            }
+            updateButtons();
+          } else if (msg.type === "error") {
+            running = false;
+            progressStage.textContent = msg.aborted ? "Cancelled" : "Failed";
+            appendLogHtml(
+              '<span class="' + (msg.aborted ? "c-yellow" : "c-red") + ' c-bold">' +
+                (msg.aborted ? "[*] Cancelled." : "[X] Error: " + escapeText(msg.message)) +
+                "</span>"
+            );
+            updateButtons();
+          }
+        };
+
+        w.onerror = (err) => {
+          running = false;
+          progressStage.textContent = "Worker error";
+          appendLogHtml('<span class="c-red c-bold">[X] Worker error: ' + escapeText(err.message || "Unknown") + "</span>");
+          updateButtons();
+        };
+
+        w.postMessage({
+          type: "start",
+          file: selectedFile,
+          options: {
+            stripExtensionKit: optStripExtensionKit.checked,
+            stripPlugIns: optStripPlugIns.checked,
+            cleanSignatures: optCleanSignatures.checked,
+            dryRun,
+            verbose: optVerbose.checked,
+          },
+        });
+      }
+
+      btnDryRun.addEventListener("click", () => startRun(true));
+      btnFix.addEventListener("click", () => startRun(false));
+
+      btnCancel.addEventListener("click", () => {
+        if (worker && running) {
+          progressStage.textContent = "Cancelling...";
+          worker.postMessage({ type: "cancel" });
+        }
+      });
+
+      btnShare.addEventListener("click", async () => {
+        if (!outputBlob || !outputFileName) return;
+        try {
+          const shareFile = new File([outputBlob], outputFileName, { type: "application/octet-stream" });
+          await navigator.share({
+            files: [shareFile],
+            title: outputFileName,
+          });
+        } catch (err) {
+          if (!(err instanceof DOMException && err.name === "AbortError")) {
+            appendLogHtml('<span class="c-red">[!] Share failed: ' + escapeText(String(err)) + "</span>");
+          }
+        }
+      });
+
+      window.addEventListener("beforeunload", () => {
+        revokeDownload();
+        if (workerUrl) URL.revokeObjectURL(workerUrl);
+      });
+    })();
+  </script>
+</body>
+</html>

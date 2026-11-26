@@ -1,0 +1,32 @@
+{
+  "name": "ipa-ldid-fixer",
+  "version": "1.0.0",
+  "description": "Zero-dependency isomorphic library, Node CLI, and browser web tool to fix ldid end >= size - 0x10 assertion errors in iOS IPAs.",
+  "type": "module",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./node": {
+      "types": "./dist/node.d.ts",
+      "default": "./dist/node.js"
+    }
+  },
+  "bin": {
+    "ipa-ldid-fixer": "./dist/cli.js"
+  },
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "build:lib": "tsc",
+    "build:web": "node scripts/build-web.mjs",
+    "build": "npm run build:lib && npm run build:web",
+    "test": "node --test test/fixer.test.mjs"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "@types/node": "^26.0.0",
+    "esbuild": "^0.28.2",
+    "typescript": "^7.0.2"
+  }
+}

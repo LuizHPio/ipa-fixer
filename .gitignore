@@ -1,0 +1,18 @@
+# IPA files & unpacked payloads
+*.ipa
+ipa/
+unpacked_ipa/
+
+# Node & TypeScript build artifacts
+node_modules/
+tools/ipa-fixer/dist/
+
+# Python caches
+.mypy_cache/
+__pycache__/
+*.pyc
+
+# OS / Editor
+.DS_Store
+Thumbs.db
+.vscode/
